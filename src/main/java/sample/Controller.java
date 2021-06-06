@@ -25,21 +25,19 @@ public class Controller implements Initializable {
 
     @FXML
     private TextField pathField;
-
     @FXML
     private Button browseButton;
-
     @FXML
     private Pane pane1;
-
     @FXML
     private Button optimizeButton;
-
     @FXML
     private CheckBox addXMLCheck;
+    @FXML
+    private Pane dragPane;
 
-
-    final FileChooser fileChooser = new FileChooser();
+    private final String XML_VERSION = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+    private final FileChooser fileChooser = new FileChooser();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -47,7 +45,7 @@ public class Controller implements Initializable {
 
         fileChooser.getExtensionFilters().add(filter);
 
-        pathField.setOnDragOver(event -> {
+        dragPane.setOnDragOver(event -> {
             Dragboard db = event.getDragboard();
             if (db.hasFiles()) {
                 event.acceptTransferModes(TransferMode.COPY);
@@ -56,7 +54,7 @@ public class Controller implements Initializable {
             }
         });
 
-        pathField.setOnDragDropped(event -> {
+        dragPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
             if (db.hasFiles()) {
@@ -83,7 +81,8 @@ public class Controller implements Initializable {
 
     public void showGUI() {
         File file = fileChooser.showOpenDialog(browseButton.getScene().getWindow());
-        pathField.setText(file.getAbsolutePath());
+        if (file != null)
+            pathField.setText(file.getAbsolutePath());
     }
 
     public void optimize() {
@@ -94,8 +93,10 @@ public class Controller implements Initializable {
         try {
             String match = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             if (file.isFile()) {
-                if (addXMLtags)
+                if (addXMLtags && match.contains(XML_VERSION)) {
                     match = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + match;
+                }
+
                 String str = match.replaceAll("(\\d+\\.\\d)(?:\\d+)", "$1");
                 String baseName = FilenameUtils.getBaseName(file.getName());
                 BufferedWriter writer = new BufferedWriter(new FileWriter(file.getParent() + "/" + baseName + "_opt.svg"));
